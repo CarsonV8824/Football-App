@@ -1,4 +1,5 @@
 import sqlite3
+import os
 
 class Database:
     """put data in from the csv file's into a sqlite database for ease of use."""
@@ -14,6 +15,16 @@ class Database:
         self.connection.close()
 
     @staticmethod
-    def create_tables(self):
+    def create_tables():
         with Database() as db:
-            pass
+            with open("schemas/database_tables.sql") as f:
+                data = f.read()
+
+            print(data)
+            
+            # I know this is bad. Only used to make tables.
+            db.cursor.executescript(data)
+            db.connection.commit()
+
+if __name__ == "__main__":
+    Database.create_tables()
