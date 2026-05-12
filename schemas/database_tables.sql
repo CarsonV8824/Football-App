@@ -1,7 +1,8 @@
 CREATE TABLE IF NOT EXISTS player_week (
     player_week_id INTEGER PRIMARY KEY,
-    game_week INTEGER,
-    season_year INT,
+    game_week_from INTEGER,
+    game_week_to INTEGER
+    season_year INTEGER,
     player_name TEXT,
     team TEXT, 
     pos TEXT,
@@ -12,9 +13,9 @@ CREATE TABLE IF NOT EXISTS player_week (
 CREATE TABLE IF NOT EXISTS passing (
     passing_id INTEGER PRIMARY KEY,
     player_week_id INTEGER,
-    passing_yds INT,
-    passing_td INT,
-    passing_int INT,
+    passing_yds INTEGER,
+    passing_td INTEGER,
+    passing_int INTEGER,
     FOREIGN KEY (player_week_id) REFERENCES player_week (player_week_id)
 );
 
