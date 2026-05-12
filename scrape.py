@@ -27,7 +27,8 @@ def get_data():
                     html_string = StringIO(str(table_element))
                     table = pd.read_html(html_string)
                     table = table[0]
-                    print(table.to_csv(f"data/{year}_{week}_fantasy.csv"))
+                    # table = table.drop(table.columns[0], axis=1)
+                    print(table.to_csv(f"data/{year}_week_{week - 1}_to_{week}_fantasy.csv"))
                 else:
                     print(f"No table found for year {year}")
             
