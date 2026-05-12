@@ -13,6 +13,7 @@ def get_data():
     for year in years:
         for week in weeks:
             if week == 1:
+                # get week 1 to week 2, not week 1 to week 1
                 continue
             time.sleep(1)
             url = f'https://fantasydata.com/nfl/fantasy-football-leaders?scope=game&sp=2025_REG&week_from={week - 1}&week_to={week}&scoring=fpts_ppr&order_by=fpts_ppr&sort_dir=desc'
