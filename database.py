@@ -7,7 +7,7 @@ class Database:
     def __init__(self):
         db_dir = r"C:\nfl-app"
         os.makedirs(db_dir, exist_ok=True)
-        db_path = os.path.join(db_dir, "fantasy.db")
+        db_path = os.path.join(db_dir, "fantasy_one_week.db")
         self.connection = sqlite3.connect(db_path)
         self.cursor = self.connection.cursor()
 

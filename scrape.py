@@ -18,11 +18,8 @@ def get_data() -> Generator[tuple[list, int, int, int]]:
         print(f"now year: {year}")
 
         for week in weeks:
-            if week == 1:
-                # get week 1 to week 2, not week 1 to week 1
-                continue
             time.sleep(0.25) # so we don't get banned or flagged
-            url = f'https://fantasydata.com/nfl/fantasy-football-leaders?scope=game&sp={year}_REG&week_from={week - 1}&week_to={week}&scoring=fpts_ppr&order_by=fpts_ppr&sort_dir=desc'
+            url = f'https://fantasydata.com/nfl/fantasy-football-leaders?scope=game&sp={year}_REG&week_from={week}&week_to={week}&scoring=fpts_ppr&order_by=fpts_ppr&sort_dir=desc'
             response = requests.get(url)
 
             if response.status_code == 200:
@@ -37,7 +34,7 @@ def get_data() -> Generator[tuple[list, int, int, int]]:
                     lists = table.values.tolist()
                     for item in lists:
                         print(item)
-                        yield item, week-1, week, year
+                        yield item, week, week, year
                         
                     # table = table.drop(table.columns[0], axis=1)
                     # print(table.to_csv(f"data/{year}_week_{week - 1}_to_{week}_fantasy.csv"))
