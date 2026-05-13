@@ -1,13 +1,14 @@
 import sqlite3
 import os
+from typing import Generator
 
 class Database:
     """put data in from the csv file's into a sqlite database for ease of use."""
 
     def __init__(self):
-        db_dir = r"C:\nfl-app"
-        os.makedirs(db_dir, exist_ok=True)
-        db_path = os.path.join(db_dir, "fantasy_one_week.db")
+        #db_dir = r"C:\nfl-app"
+        #os.makedirs(db_dir, exist_ok=True)
+        db_path = os.path.join("src/fantasy_one_week.db")
         self.connection = sqlite3.connect(db_path)
         self.cursor = self.connection.cursor()
 
@@ -20,7 +21,8 @@ class Database:
     @staticmethod
     def create_tables():
         with Database() as db:
-            with open("fantasy schemas/database_tables.sql") as f:
+            path = os.path.join("src", "fantasy schemas", "database_tables.sql")
+            with open(path) as f:
                 data = f.read()
 
             print(data)
@@ -66,5 +68,27 @@ class Database:
             
             db.connection.commit()
 
+    @staticmethod
+    def get_data() -> Generator[list[tuple]]:
+        with Database() as db:
+            db.cursor.execute("""SELECT player_week.rank, player_week.game_week_from, player_week.game_week_to, player_week.season_year, player_week.player_name, player_week.team, player_week.pos, player_week.opp, player_week.fantasy_score, passing.passing_yds, passing.passing_td, passing.passing_int, rushing.rushing_yds, rushing.rushing_td, receiving.receiving_rec, receiving.receiving_yds, receiving.receiving_td, defense.defense_sck, defense.defense_int, defense.defense_ff, defense.defense_fr
+                                FROM player_week
+                                JOIN passing
+                                 on passing.player_week_id = player_week.player_week_id
+                                JOIN rushing
+                                 on rushing.player_week_id = player_week.player_week_id
+                                JOIN receiving
+                                 on receiving.player_week_id = player_week.player_week_id
+                                JOIN defense
+                                 on defense.player_week_id = player_week.player_week_id
+                              """)
+            data = db.cursor.fetchall()
+        for piece in data:
+            yield piece
+
 if __name__ == "__main__":
-    Database.create_tables()
+    count = 0
+    for line in Database.get_data():
+        count += 1
+        print(line)
+    print(f"count: {count}")
