@@ -71,7 +71,7 @@ class Database:
     @staticmethod
     def get_data() -> Generator[list[tuple]]:
         with Database() as db:
-            db.cursor.execute("""SELECT player_week.rank, player_week.game_week_from, player_week.game_week_to, player_week.season_year, player_week.player_name, player_week.team, player_week.pos, player_week.opp, player_week.fantasy_score, passing.passing_yds, passing.passing_td, passing.passing_int, rushing.rushing_yds, rushing.rushing_td, receiving.receiving_rec, receiving.receiving_yds, receiving.receiving_td, defense.defense_sck, defense.defense_int, defense.defense_ff, defense.defense_fr
+            db.cursor.execute("""SELECT player_week.game_week_from, player_week.game_week_to, player_week.pos, player_week.fantasy_score, passing.passing_yds, passing.passing_td, passing.passing_int, rushing.rushing_yds, rushing.rushing_td, receiving.receiving_rec, receiving.receiving_yds, receiving.receiving_td, defense.defense_sck, defense.defense_int, defense.defense_ff, defense.defense_fr
                                 FROM player_week
                                 JOIN passing
                                  on passing.player_week_id = player_week.player_week_id
@@ -84,11 +84,19 @@ class Database:
                               """)
             data = db.cursor.fetchall()
         for piece in data:
-            yield piece
+            piece = list(piece)
 
-if __name__ == "__main__":
+            piece[2] = sum([ord(char) for char in piece[2]]) # takes the position and sums each chracter ascii into a number for model
+
+            fantasy_score:float = piece.pop(3)
+            yield piece, fantasy_score
+
+def main():
     count = 0
     for line in Database.get_data():
         count += 1
         print(line)
     print(f"count: {count}")
+
+if __name__ == "__main__":
+    main()
