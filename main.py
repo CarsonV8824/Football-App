@@ -6,6 +6,7 @@ from frontend.mainwindow import MainWindow
 
 def main():
     app = QApplication(sys.argv)
+    app.setApplicationName("Fantasy Football App")
     style_path = os.path.join("frontend", "assets", "style.css")
     with open(style_path, "r") as f:
         _style = f.read()
