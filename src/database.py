@@ -87,7 +87,7 @@ class Database:
             piece = list(piece)
 
             piece[2] = sum([ord(char) for char in piece[2]]) # takes the position and sums each chracter ascii into a number for model
-
+            
             fantasy_score:float = piece.pop(3)
             yield piece, fantasy_score
 
