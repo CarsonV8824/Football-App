@@ -9,9 +9,13 @@ from typing import Generator
 
 # link to data: https://fantasydata.com/nfl/fantasy-football-leaders?scope=game
 
-def get_data() -> Generator[tuple[list, int, int, int]]:
-    years = range(2002, 2026)
-    weeks = range(1, 19)
+def get_data(year:int|None=None, week:int|None=None) -> Generator[tuple[list, int, int, int]]:
+    if year == None and week == None:
+        years = range(2002, 2026)
+        weeks = range(1, 19)
+    else:
+        year = range(year, year+1)
+        weeks = range(1, week+1)
 
     for year in years:
 
