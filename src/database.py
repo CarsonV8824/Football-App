@@ -93,22 +93,38 @@ class Database:
                                 JOIN player_week pw ON d.player_week_id = pw.player_week_id""")
             defense_map = {(row[0], row[1]): row[2:] for row in db.cursor.fetchall()}
             
-            db.cursor.execute("""SELECT player_week_id, game_week_from, game_week_to, pos, ,fantasy_score
+            db.cursor.execute("""SELECT player_week_id, game_week_from, game_week_to, pos, player_name, fantasy_score
                                 FROM player_week
                               """)
             player_week_data = db.cursor.fetchall()
         
+        # Build player lookup map: (player_name, week) -> player_week_id for previous week lookups
+        player_id_map = {}
         for row in player_week_data:
-            player_week_id, week_from, week_to, position, fantasy_score = row
+            player_week_id, week_from, _, _, player_name, _ = row
+            player_id_map[(player_name, week_from)] = player_week_id
+        
+        for row in player_week_data:
+            player_week_id, week_from, week_to, position, player_name, fantasy_score = row
             
             # Encode position as ASCII sum
             encoded_pos = sum([ord(char) for char in position])
             
-           # bad
-            passing_stats = passing_map.get((player_week_id, week_from-1), (0, 0, 0))
-            rushing_stats = rushing_map.get((player_week_id, week_from-1), (0, 0))
-            receiving_stats = receiving_map.get((player_week_id, week_from-1), (0, 0, 0))
-            defense_stats = defense_map.get((player_week_id, week_from-1), (0, 0, 0, 0))
+            # Get previous week's player_week_id for this player
+            prev_week_id = player_id_map.get((player_name, week_from - 1))
+            
+            # Look up previous week's stats using the correct player_week_id
+            if prev_week_id is not None:
+                passing_stats = passing_map.get((prev_week_id, week_from - 1), (0, 0, 0))
+                rushing_stats = rushing_map.get((prev_week_id, week_from - 1), (0, 0))
+                receiving_stats = receiving_map.get((prev_week_id, week_from - 1), (0, 0, 0))
+                defense_stats = defense_map.get((prev_week_id, week_from - 1), (0, 0, 0, 0))
+            else:
+                # No previous week data available, use zeros
+                passing_stats = (0, 0, 0)
+                rushing_stats = (0, 0)
+                receiving_stats = (0, 0, 0)
+                defense_stats = (0, 0, 0, 0)
             
             # Combine into feature vector
             feature_vector = [week_from, week_to, encoded_pos] + list(passing_stats) + list(rushing_stats) + list(receiving_stats) + list(defense_stats)
