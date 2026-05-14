@@ -8,7 +8,7 @@ import seaborn as sns
 import pandas as pd
 import matplotlib.pyplot as plt
 
-from model import FantasyModel
+from model import FantasyMLP
 from dataset import get_tensor_data
 
 # Training hyperparameters
@@ -32,7 +32,7 @@ def train():
     dataset = TensorDataset(X, y)
     dataloader = DataLoader(dataset, batch_size=BATCH_SIZE, shuffle=True)
 
-    model = FantasyModel(input_size=X.shape[1]).to(device)
+    model = FantasyMLP(input_size=X.shape[1]).to(device)
     loss_fn = nn.MSELoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=LEARNING_RATE, weight_decay=LEARNING_DECAY)
 
@@ -82,7 +82,7 @@ def load_and_test():
     model_path = os.path.join(os.path.dirname(__file__), "fantasy_model.pth")
     
     # Load model with correct input size
-    model = FantasyModel(input_size=X.shape[1])
+    model = FantasyMLP(input_size=X.shape[1])
     model.load_state_dict(torch.load(model_path, map_location=device))
     model.to(device)
     model.eval()  # Set to evaluation mode
