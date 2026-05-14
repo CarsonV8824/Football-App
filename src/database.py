@@ -70,26 +70,50 @@ class Database:
 
     @staticmethod
     def get_data() -> Generator[list[tuple]]:
+        
         with Database() as db:
-            db.cursor.execute("""SELECT player_week.game_week_from, player_week.game_week_to, player_week.pos, player_week.fantasy_score, passing.passing_yds, passing.passing_td, passing.passing_int, rushing.rushing_yds, rushing.rushing_td, receiving.receiving_rec, receiving.receiving_yds, receiving.receiving_td, defense.defense_sck, defense.defense_int, defense.defense_ff, defense.defense_fr
-                                FROM player_week
-                                JOIN passing
-                                 on passing.player_week_id = player_week.player_week_id
-                                JOIN rushing
-                                 on rushing.player_week_id = player_week.player_week_id
-                                JOIN receiving
-                                 on receiving.player_week_id = player_week.player_week_id
-                                JOIN defense
-                                 on defense.player_week_id = player_week.player_week_id
-                              """)
-            data = db.cursor.fetchall()
-        for piece in data:
-            piece = list(piece)
-
-            piece[2] = sum([ord(char) for char in piece[2]]) # takes the position and sums each chracter ascii into a number for model
             
-            fantasy_score:float = piece.pop(3)
-            yield piece, fantasy_score
+            db.cursor.execute("""SELECT p.player_week_id, pw.game_week_from, p.passing_yds, p.passing_td, p.passing_int 
+                                FROM passing p 
+                                JOIN player_week pw ON p.player_week_id = pw.player_week_id""")
+            passing_map = {(row[0], row[1]): row[2:] for row in db.cursor.fetchall()}
+            
+            db.cursor.execute("""SELECT r.player_week_id, pw.game_week_from, r.rushing_yds, r.rushing_td 
+                                FROM rushing r 
+                                JOIN player_week pw ON r.player_week_id = pw.player_week_id""")
+            rushing_map = {(row[0], row[1]): row[2:] for row in db.cursor.fetchall()}
+            
+            db.cursor.execute("""SELECT rec.player_week_id, pw.game_week_from, rec.receiving_rec, rec.receiving_yds, rec.receiving_td 
+                                FROM receiving rec 
+                                JOIN player_week pw ON rec.player_week_id = pw.player_week_id""")
+            receiving_map = {(row[0], row[1]): row[2:] for row in db.cursor.fetchall()}
+            
+            db.cursor.execute("""SELECT d.player_week_id, pw.game_week_from, d.defense_sck, d.defense_int, d.defense_ff, d.defense_fr 
+                                FROM defense d 
+                                JOIN player_week pw ON d.player_week_id = pw.player_week_id""")
+            defense_map = {(row[0], row[1]): row[2:] for row in db.cursor.fetchall()}
+            
+            db.cursor.execute("""SELECT player_week_id, game_week_from, game_week_to, pos, ,fantasy_score
+                                FROM player_week
+                              """)
+            player_week_data = db.cursor.fetchall()
+        
+        for row in player_week_data:
+            player_week_id, week_from, week_to, position, fantasy_score = row
+            
+            # Encode position as ASCII sum
+            encoded_pos = sum([ord(char) for char in position])
+            
+           # bad
+            passing_stats = passing_map.get((player_week_id, week_from-1), (0, 0, 0))
+            rushing_stats = rushing_map.get((player_week_id, week_from-1), (0, 0))
+            receiving_stats = receiving_map.get((player_week_id, week_from-1), (0, 0, 0))
+            defense_stats = defense_map.get((player_week_id, week_from-1), (0, 0, 0, 0))
+            
+            # Combine into feature vector
+            feature_vector = [week_from, week_to, encoded_pos] + list(passing_stats) + list(rushing_stats) + list(receiving_stats) + list(defense_stats)
+            
+            yield feature_vector, fantasy_score
 
 def main():
     count = 0
