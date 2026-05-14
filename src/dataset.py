@@ -22,6 +22,7 @@ def get_tensor_data(fit_scaler=None):
     y = []
 
     for inputs, output in Database.get_data():
+        print(inputs, output)
         X.append(inputs)
         y.append([output])
 

@@ -94,6 +94,10 @@ python scrape.py
 
 - Team
 
+- opp team
+
+- amount of years of player
+
 **Output:**
 
 - Predicted Fantasy Points

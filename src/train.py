@@ -12,10 +12,10 @@ from model import FantasyMLP
 from dataset import get_tensor_data
 
 # Training hyperparameters
-BATCH_SIZE = 100
-LEARNING_RATE = 0.01
-LEARNING_DECAY = 1e-6
-NUM_EPOCHS = 195
+BATCH_SIZE = 64
+LEARNING_RATE = 0.001
+LEARNING_DECAY = 1e-5
+NUM_EPOCHS = 120
 CHECKPOINT_INTERVAL = 15
 VALIDATION_SPLIT = 0.2
  
@@ -33,7 +33,7 @@ def train():
     dataloader = DataLoader(dataset, batch_size=BATCH_SIZE, shuffle=True)
 
     model = FantasyMLP(input_size=X.shape[1]).to(device)
-    loss_fn = nn.MSELoss()
+    loss_fn = nn.L1Loss()
     optimizer = torch.optim.Adam(model.parameters(), lr=LEARNING_RATE, weight_decay=LEARNING_DECAY)
 
 
@@ -91,7 +91,7 @@ def load_and_test():
     with torch.no_grad():
         predictions = model(X)
         print(predictions)
-        loss = torch.nn.MSELoss()(predictions, y)
+        loss = torch.nn.L1Loss()(predictions, y)
         print(f"Test loss: {loss.item()}")
     
     return model, predictions

@@ -111,11 +111,13 @@ class Database:
             player_id_map[player_name].add((player_name, season_year))
             if week_from == 1:
                 continue
+            if season_year < 2015:
+                continue
             
             # Encode position as ASCII sum
-            encoded_pos = sum([ord(char) for char in position])
-            team_encoded = sum([ord(char) for char in team])
-            opp_encoded = sum([ord(char) for char in opp_team])
+            encoded_pos = (sum([ord(char) for char in position]) - 65) / 40
+            team_encoded = (sum([ord(char) for char in team]) - 65) / 40
+            opp_encoded = (sum([ord(char) for char in opp_team]) -  65) / 40
             
             # Collect stats from past 4 weeks (pad with zeros if fewer weeks available)
             past_passing = []
