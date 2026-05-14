@@ -1,0 +1,4 @@
+QWidget#entryBar {
+    background-color: palette(button);
+    color: palette(button-text);
+}
