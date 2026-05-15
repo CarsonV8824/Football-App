@@ -222,8 +222,8 @@ class DataDatabase:
                     p.passing_yds, p.passing_td, p.passing_int
                 FROM passing p
                 JOIN player_week pw ON p.player_week_id = pw.player_week_id
-                WHERE pw.player_name = ? AND pw.game_week_from = ? AND pw.season_year = ?
-            """, (name, week, year))
+                WHERE pw.player_name = ?
+            """, (name,))
             passing_map = {(row[0], row[1], row[2]): row[3:] for row in db.cursor.fetchall()}
 
             db.cursor.execute("""
@@ -231,8 +231,8 @@ class DataDatabase:
                     r.rushing_yds, r.rushing_td
                 FROM rushing r
                 JOIN player_week pw ON r.player_week_id = pw.player_week_id
-                WHERE pw.player_name = ? AND pw.game_week_from = ? AND pw.season_year = ?
-            """, (name, week, year))
+                WHERE pw.player_name = ?
+            """, (name,))
             rushing_map = {(row[0], row[1], row[2]): row[3:] for row in db.cursor.fetchall()}
 
             db.cursor.execute("""
@@ -240,8 +240,8 @@ class DataDatabase:
                     rec.receiving_rec, rec.receiving_yds, rec.receiving_td
                 FROM receiving rec
                 JOIN player_week pw ON rec.player_week_id = pw.player_week_id
-                WHERE pw.player_name = ? AND pw.game_week_from = ? AND pw.season_year = ?
-            """, (name, week, year))
+                WHERE pw.player_name = ?
+            """, (name,))
             receiving_map = {(row[0], row[1], row[2]): row[3:] for row in db.cursor.fetchall()}
 
             db.cursor.execute("""
@@ -249,16 +249,16 @@ class DataDatabase:
                     d.defense_sck, d.defense_int, d.defense_ff, d.defense_fr
                 FROM defense d
                 JOIN player_week pw ON d.player_week_id = pw.player_week_id
-                WHERE pw.player_name = ? AND pw.game_week_from = ? AND pw.season_year = ?
-            """, (name, week, year))
+                WHERE pw.player_name = ?
+            """, (name, ))
             defense_map = {(row[0], row[1], row[2]): row[3:] for row in db.cursor.fetchall()}
 
             db.cursor.execute("""
                 SELECT player_week_id, game_week_from, game_week_to, pos, player_name,
                     fantasy_score, team, opp, season_year
                 FROM player_week
-                WHERE player_name = ? AND game_week_from = ? AND season_year = ?
-            """, (name, week, year))
+                WHERE player_name = ?
+            """, (name, ))
             player_week_data = db.cursor.fetchall()
 
         # Keep these separate so keys do not collide
