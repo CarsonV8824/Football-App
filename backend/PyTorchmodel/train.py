@@ -8,8 +8,8 @@ import seaborn as sns
 import pandas as pd
 import matplotlib.pyplot as plt
 
-from model import FantasyMLP
-from dataset import get_tensor_data
+from backend.PyTorchmodel.model import FantasyMLP
+from backend.PyTorchmodel.dataset import get_tensor_data
 
 # Training hyperparameters
 BATCH_SIZE = 64

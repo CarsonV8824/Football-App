@@ -3,7 +3,7 @@ import os
 from typing import Generator
 from sklearn.preprocessing import StandardScaler
 
-class Database:
+class DataDatabase:
     """put data in from the csv file's into a sqlite database for ease of use."""
 
     def __init__(self):
@@ -21,7 +21,7 @@ class Database:
 
     @staticmethod
     def create_tables():
-        with Database() as db:
+        with DataDatabase() as db:
             path = os.path.join("src", "fantasy schemas", "database_tables.sql")
             with open(path) as f:
                 data = f.read()
@@ -34,7 +34,7 @@ class Database:
 
     @staticmethod
     def insert_data(rank:int, name:str, team:str, pos:str, game_week_from:int, game_week_to:int, season_year:int, opp:str, passing_yds:int, passing_td:int, passing_int:int, rushing_yds:int, rushing_td:int, receiving_rec:int, receiving_yds:int, receiving_td:int, defense_sck:int, defense_int:int, defense_ff:int, defense_fr:int, fpts:float) -> None:
-        with Database() as db:
+        with DataDatabase() as db:
             # Insert into player_week table
             db.cursor.execute("""INSERT INTO player_week 
                 (rank, game_week_from, game_week_to, season_year, player_name, team, pos, opp, fantasy_score)
@@ -72,7 +72,7 @@ class Database:
     @staticmethod
     def get_data() -> Generator[list[tuple]]:
         
-        with Database() as db:
+        with DataDatabase() as db:
             db.cursor.execute("""
                 SELECT p.player_week_id, pw.game_week_from, pw.season_year,
                     p.passing_yds, p.passing_td, p.passing_int
@@ -203,7 +203,7 @@ class Database:
 
 def main():
     count = 0
-    for line in Database.get_data():
+    for line in DataDatabase.get_data():
         count += 1
         print(line)
     print(f"count: {count}")

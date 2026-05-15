@@ -1,4 +1,4 @@
-from database import Database
+from backend.PyTorchmodel.dataDatabase import DataDatabase
 import torch
 from sklearn.preprocessing import StandardScaler
 import pickle
@@ -21,7 +21,7 @@ def get_tensor_data(fit_scaler=None):
     X = []
     y = []
 
-    for inputs, output in Database.get_data():
+    for inputs, output in DataDatabase.get_data():
         print(inputs, output)
         X.append(inputs)
         y.append([output])

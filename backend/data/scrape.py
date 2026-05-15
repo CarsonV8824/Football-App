@@ -3,7 +3,7 @@ from bs4 import BeautifulSoup
 import pandas as pd
 from io import StringIO
 import time
-from database import Database
+from backend.PyTorchmodel.dataDatabase import DataDatabase
 
 from typing import Generator
 
