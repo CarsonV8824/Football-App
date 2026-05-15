@@ -3,7 +3,7 @@ from bs4 import BeautifulSoup
 import pandas as pd
 from io import StringIO
 import time
-from backend.PyTorchmodel.dataDatabase import DataDatabase
+from dataDatabase import DataDatabase
 
 from typing import Generator
 
@@ -46,12 +46,13 @@ def get_data(year:int|None=None, week:int|None=None) -> Generator[tuple[list, in
                     print(f"No table found for year {year}")
         
             
-def main():
-    for line, past_week, week, year in get_data():
-        break
-        """Database.insert_data(line[0], line[1], line[2], line[3], past_week, week, year,
+def insert_data(year:int|None=None, week:int|None=None):
+    for line, past_week, week, year in get_data(year, week):
+        
+        DataDatabase.insert_data(line[0], line[1], line[2], line[3], past_week, week, year,
         line[5], line[6], line[7], line[8], line[9], line[10], line[11], line[12],
-        line[13], line[14], line[15], line[16], line[17], line[18])"""
+        line[13], line[14], line[15], line[16], line[17], line[18])
 
 if __name__ == "__main__":
-    main()
+    #insert_data()
+    pass

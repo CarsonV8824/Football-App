@@ -8,8 +8,9 @@ import seaborn as sns
 import pandas as pd
 import matplotlib.pyplot as plt
 
-from backend.PyTorchmodel.model import FantasyMLP
-from backend.PyTorchmodel.dataset import get_tensor_data
+from model import FantasyMLP
+from dataset import get_tensor_data
+from device import get_best_device
 
 # Training hyperparameters
 BATCH_SIZE = 64
@@ -20,10 +21,7 @@ CHECKPOINT_INTERVAL = 15
 VALIDATION_SPLIT = 0.2
  
 def train():
-    if not torch.xpu.is_available() or torch.xpu.device_count() < 1:
-        raise Exception("run the command: pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/xpu")
-    
-    device = torch.device("xpu")
+    device = get_best_device()
     X, y = get_tensor_data(True)
     X = X.to(device)
     y = y.to(device)
@@ -71,10 +69,10 @@ def train():
     plt.show()
     
 def load_and_test():
-    device = torch.device("xpu")
+    device = get_best_device()
     
     # Get test data first to determine input size
-    X, y = get_tensor_data(False)
+    X, y = get_tensor_data()
     X = X.to(device)
     y = y.to(device)
     

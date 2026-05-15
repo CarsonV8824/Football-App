@@ -48,18 +48,30 @@ This app scrapes player statistics from [Fantasy Data](https://fantasydata.com/n
 
 ## Setup
 
-1. Install dependencies:
+1. Create a virtual environment with a working local Python install:
 ```bash
-pip install requests beautifulsoup4 pandas
+python -m venv .venv
 ```
 
-2. Create the database:
+2. Activate it:
+```bash
+.venv\Scripts\Activate.ps1
+```
+
+3. Install dependencies:
+```bash
+pip install -r requirements.txt
+```
+
+If you are on Windows without an Intel XPU setup, keep the default CPU PyTorch build. Do not install the `xpu` wheel unless you specifically need Intel GPU acceleration and have the required runtime libraries installed.
+
+4. Create the database:
 ```python
 from database import Database
 Database.create_tables()
 ```
 
-3. Run the scraper:
+5. Run the scraper:
 ```bash
 python scrape.py
 ```

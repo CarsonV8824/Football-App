@@ -9,7 +9,7 @@ class DataDatabase:
     def __init__(self):
         #db_dir = r"C:\nfl-app"
         #os.makedirs(db_dir, exist_ok=True)
-        db_path = os.path.join("src/fantasy_one_week.db")
+        db_path = os.path.join("src/player_data.db")
         self.connection = sqlite3.connect(db_path)
         self.cursor = self.connection.cursor()
 
@@ -110,6 +110,144 @@ class DataDatabase:
                     fantasy_score, team, opp, season_year
                 FROM player_week
             """)
+            player_week_data = db.cursor.fetchall()
+
+        # Keep these separate so keys do not collide
+        player_history = {}
+        week_lookup = {}
+
+        for row in player_week_data:
+            player_week_id, week_from, _, _, player_name, _, _, _, season_year = row
+
+            if player_name not in player_history:
+                player_history[player_name] = set()
+
+            player_history[player_name].add((season_year, week_from))
+            week_lookup[(player_name, season_year, week_from)] = player_week_id
+
+        for row in player_week_data:
+            player_week_id, week_from, week_to, position, player_name, fantasy_score, team, opp_team, season_year = row
+
+            if week_from == 1 or season_year < 2015:
+                continue
+
+            # Temporary categorical encoding; better replaced with one-hot or embeddings later
+            encoded_pos = (sum(ord(char) for char in position) - 65) / 40
+            team_encoded = (sum(ord(char) for char in team) - 65) / 40
+            opp_encoded = (sum(ord(char) for char in opp_team) - 65) / 40
+
+            past_passing = []
+            past_rushing = []
+            past_receiving = []
+            past_defense = []
+
+            history_weeks = min(4, week_from - 1)
+
+            for offset in range(4, 0, -1):
+                past_week = week_from - offset
+
+                if past_week < 1:
+                    past_passing.extend((0, 0, 0))
+                    past_rushing.extend((0, 0))
+                    past_receiving.extend((0, 0, 0))
+                    past_defense.extend((0, 0, 0, 0))
+                    continue
+
+                prev_week_id = week_lookup.get((player_name, season_year, past_week))
+
+                if prev_week_id is not None:
+                    key = (prev_week_id, past_week, season_year)
+                    past_passing.extend(passing_map.get(key, (0, 0, 0)))
+                    past_rushing.extend(rushing_map.get(key, (0, 0)))
+                    past_receiving.extend(receiving_map.get(key, (0, 0, 0)))
+                    past_defense.extend(defense_map.get(key, (0, 0, 0, 0)))
+                else:
+                    past_passing.extend((0, 0, 0))
+                    past_rushing.extend((0, 0))
+                    past_receiving.extend((0, 0, 0))
+                    past_defense.extend((0, 0, 0, 0))
+
+            if history_weeks > 0:
+                avg_passing = tuple(
+                    sum(past_passing[i::3][-history_weeks:]) / history_weeks for i in range(3)
+                )
+                avg_rushing = tuple(
+                    sum(past_rushing[i::2][-history_weeks:]) / history_weeks for i in range(2)
+                )
+                avg_receiving = tuple(
+                    sum(past_receiving[i::3][-history_weeks:]) / history_weeks for i in range(3)
+                )
+                avg_defense = tuple(
+                    sum(past_defense[i::4][-history_weeks:]) / history_weeks for i in range(4)
+                )
+            else:
+                avg_passing = (0, 0, 0)
+                avg_rushing = (0, 0)
+                avg_receiving = (0, 0, 0)
+                avg_defense = (0, 0, 0, 0)
+
+            feature_vector = (
+                [week_from, week_to, season_year, encoded_pos]
+                + past_passing
+                + past_rushing
+                + past_receiving
+                + past_defense
+                + list(avg_passing)
+                + list(avg_rushing)
+                + list(avg_receiving)
+                + list(avg_defense)
+                + [team_encoded, opp_encoded, history_weeks]
+            )
+
+            yield feature_vector, fantasy_score
+
+    @staticmethod
+    def get_data_for_single_player(name:str, week:int, year:int) -> Generator[list[tuple]]:
+        
+        with DataDatabase() as db:
+
+            db.cursor.execute("""
+                SELECT p.player_week_id, pw.game_week_from, pw.season_year,
+                    p.passing_yds, p.passing_td, p.passing_int
+                FROM passing p
+                JOIN player_week pw ON p.player_week_id = pw.player_week_id
+                WHERE pw.player_name = ? AND pw.game_week_from = ? AND pw.season_year = ?
+            """, (name, week, year))
+            passing_map = {(row[0], row[1], row[2]): row[3:] for row in db.cursor.fetchall()}
+
+            db.cursor.execute("""
+                SELECT r.player_week_id, pw.game_week_from, pw.season_year,
+                    r.rushing_yds, r.rushing_td
+                FROM rushing r
+                JOIN player_week pw ON r.player_week_id = pw.player_week_id
+                WHERE pw.player_name = ? AND pw.game_week_from = ? AND pw.season_year = ?
+            """, (name, week, year))
+            rushing_map = {(row[0], row[1], row[2]): row[3:] for row in db.cursor.fetchall()}
+
+            db.cursor.execute("""
+                SELECT rec.player_week_id, pw.game_week_from, pw.season_year,
+                    rec.receiving_rec, rec.receiving_yds, rec.receiving_td
+                FROM receiving rec
+                JOIN player_week pw ON rec.player_week_id = pw.player_week_id
+                WHERE pw.player_name = ? AND pw.game_week_from = ? AND pw.season_year = ?
+            """, (name, week, year))
+            receiving_map = {(row[0], row[1], row[2]): row[3:] for row in db.cursor.fetchall()}
+
+            db.cursor.execute("""
+                SELECT d.player_week_id, pw.game_week_from, pw.season_year,
+                    d.defense_sck, d.defense_int, d.defense_ff, d.defense_fr
+                FROM defense d
+                JOIN player_week pw ON d.player_week_id = pw.player_week_id
+                WHERE pw.player_name = ? AND pw.game_week_from = ? AND pw.season_year = ?
+            """, (name, week, year))
+            defense_map = {(row[0], row[1], row[2]): row[3:] for row in db.cursor.fetchall()}
+
+            db.cursor.execute("""
+                SELECT player_week_id, game_week_from, game_week_to, pos, player_name,
+                    fantasy_score, team, opp, season_year
+                FROM player_week
+                WHERE player_name = ? AND game_week_from = ? AND season_year = ?
+            """, (name, week, year))
             player_week_data = db.cursor.fetchall()
 
         # Keep these separate so keys do not collide
