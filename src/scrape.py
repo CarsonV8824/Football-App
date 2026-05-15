@@ -3,27 +3,27 @@ from bs4 import BeautifulSoup
 import pandas as pd
 from io import StringIO
 import time
-from dataDatabase import DataDatabase
+from src.dataDatabase import DataDatabase
 
 from typing import Generator
 
 # link to data: https://fantasydata.com/nfl/fantasy-football-leaders?scope=game
 
-def get_data(year:int|None=None, week:int|None=None) -> Generator[tuple[list, int, int, int]]:
-    if year == None and week == None:
+def get_data(year: int | None = None, week: int | None = None) -> Generator[tuple[list, int, int, int]]:
+    if year is None and week is None:
         years = range(2002, 2026)
         weeks = range(1, 19)
     else:
-        year = range(year, year+1)
-        weeks = range(1, week+1)
+        years = range(year, year + 1)
+        weeks = range(1, week + 1)
 
-    for year in years:
+    for season_year in years:
 
-        print(f"now year: {year}")
+        print(f"now year: {season_year}")
 
-        for week in weeks:
+        for current_week in weeks:
             time.sleep(0.25) # so we don't get banned or flagged
-            url = f'https://fantasydata.com/nfl/fantasy-football-leaders?scope=game&sp={year}_REG&week_from={week}&week_to={week}&scoring=fpts_ppr&order_by=fpts_ppr&sort_dir=desc'
+            url = f'https://fantasydata.com/nfl/fantasy-football-leaders?scope=game&sp={season_year}_REG&week_from={current_week}&week_to={current_week}&scoring=fpts_ppr&order_by=fpts_ppr&sort_dir=desc'
             response = requests.get(url)
 
             if response.status_code == 200:
@@ -38,18 +38,18 @@ def get_data(year:int|None=None, week:int|None=None) -> Generator[tuple[list, in
                     lists = table.values.tolist()
                     for item in lists:
                         print(item)
-                        yield item, week, week, year
+                        yield item, current_week, current_week, season_year
                         
                     # table = table.drop(table.columns[0], axis=1)
-                    # print(table.to_csv(f"data/{year}_week_{week - 1}_to_{week}_fantasy.csv"))
+                    # print(table.to_csv(f"data/{season_year}_week_{current_week - 1}_to_{current_week}_fantasy.csv"))
                 else:
-                    print(f"No table found for year {year}")
+                    print(f"No table found for year {season_year}")
         
             
-def insert_data(year:int|None=None, week:int|None=None):
-    for line, past_week, week, year in get_data(year, week):
+def insert_data(year: int | None = None, week: int | None = None):
+    for line, past_week, current_week, season_year in get_data(year, week):
         
-        DataDatabase.insert_data(line[0], line[1], line[2], line[3], past_week, week, year,
+        DataDatabase.insert_data(line[0], line[1], line[2], line[3], past_week, current_week, season_year,
         line[5], line[6], line[7], line[8], line[9], line[10], line[11], line[12],
         line[13], line[14], line[15], line[16], line[17], line[18])
 

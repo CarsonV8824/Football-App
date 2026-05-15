@@ -12,6 +12,7 @@ class DataDatabase:
         db_path = os.path.join("src/player_data.db")
         self.connection = sqlite3.connect(db_path)
         self.cursor = self.connection.cursor()
+        self.ensure_tables()
 
     def __enter__(self):
         return self
@@ -19,18 +20,27 @@ class DataDatabase:
     def __exit__(self, exc_type, exc_value, traceback):
         self.connection.close()
 
+    def ensure_tables(self):
+        self.cursor.execute("""
+            SELECT name
+            FROM sqlite_master
+            WHERE type = 'table' AND name = 'player_week'
+        """)
+
+        if self.cursor.fetchone() is not None:
+            return
+
+        path = os.path.join("src", "fantasy schemas", "database_tables.sql")
+        with open(path) as f:
+            schema = f.read()
+
+        self.cursor.executescript(schema)
+        self.connection.commit()
+
     @staticmethod
     def create_tables():
         with DataDatabase() as db:
-            path = os.path.join("src", "fantasy schemas", "database_tables.sql")
-            with open(path) as f:
-                data = f.read()
-
-            print(data)
-            
-            # I know this is bad. Only used to make tables.
-            db.cursor.executescript(data)
-            db.connection.commit()
+            db.ensure_tables()
 
     @staticmethod
     def insert_data(rank:int, name:str, team:str, pos:str, game_week_from:int, game_week_to:int, season_year:int, opp:str, passing_yds:int, passing_td:int, passing_int:int, rushing_yds:int, rushing_td:int, receiving_rec:int, receiving_yds:int, receiving_td:int, defense_sck:int, defense_int:int, defense_ff:int, defense_fr:int, fpts:float) -> None:
@@ -205,6 +215,7 @@ class DataDatabase:
     def get_data_for_single_player(name:str, week:int, year:int) -> Generator[list[tuple]]:
         
         with DataDatabase() as db:
+            db.create_tables()
 
             db.cursor.execute("""
                 SELECT p.player_week_id, pw.game_week_from, pw.season_year,

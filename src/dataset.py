@@ -1,4 +1,4 @@
-from dataDatabase import DataDatabase
+from src.dataDatabase import DataDatabase
 import torch
 from sklearn.preprocessing import StandardScaler
 import pickle

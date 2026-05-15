@@ -14,9 +14,9 @@ from src.dataset import get_predicted_data_name
 from src.device import get_best_device
 
 def predict():
-    name = input("Name of player")
-    year = int(input("What year did your season start in?"))
-    week = int(input("What week are you in to predict next week?"))
+    name = input("Name of player: ")
+    year = int(input("What year did your season start in? "))
+    week = int(input("What week are you in to predict next week? "))
     insert_data(year, week)
     
     device = get_best_device()
