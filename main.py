@@ -9,6 +9,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 from src.model import FantasyMLP
+from src.paths import MODEL_PATH
 from src.scrape import insert_data
 from src.dataset import get_predicted_data_name
 from src.device import get_best_device
@@ -20,16 +21,14 @@ def predict():
     insert_data(year, week)
     
     device = get_best_device()
-    X, y = get_predicted_data_name(name)
+    X, y = get_predicted_data_name(name, week, year)
     X = X.to(device)
     y = y.to(device)
     
     # Path to model file
-    model_path = os.path.join(os.path.dirname(__file__), "fantasy_model.pth")
-    
     # Load model with correct input size
     model = FantasyMLP(input_size=X.shape[1])
-    model.load_state_dict(torch.load(model_path, map_location=device))
+    model.load_state_dict(torch.load(MODEL_PATH, map_location=device))
     model.to(device)
     model.eval()  # Set to evaluation mode
     

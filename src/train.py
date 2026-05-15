@@ -9,6 +9,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 from model import FantasyMLP
+from paths import MODEL_PATH
 from dataset import get_tensor_data
 from device import get_best_device
 
@@ -58,9 +59,8 @@ def train():
             scores["loss"].append(full_loss.item())
         print(epoch)
 
-    model_path = os.path.join(os.path.dirname(__file__), "fantasy_model.pth")
-    torch.save(model.state_dict(), model_path)
-    print(f"Model saved to {model_path}")
+    torch.save(model.state_dict(), MODEL_PATH)
+    print(f"Model saved to {MODEL_PATH}")
 
     temp = pd.DataFrame(scores)
     sns.regplot(data=temp, x="epchos", y="loss")
@@ -77,11 +77,9 @@ def load_and_test():
     y = y.to(device)
     
     # Path to model file
-    model_path = os.path.join(os.path.dirname(__file__), "fantasy_model.pth")
-    
     # Load model with correct input size
     model = FantasyMLP(input_size=X.shape[1])
-    model.load_state_dict(torch.load(model_path, map_location=device))
+    model.load_state_dict(torch.load(MODEL_PATH, map_location=device))
     model.to(device)
     model.eval()  # Set to evaluation mode
     
